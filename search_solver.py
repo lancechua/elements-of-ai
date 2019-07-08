@@ -71,7 +71,12 @@ class SearchSolver(ABC):
         return pd.DataFrame(all_states, columns=self.agents)
 
     def gen_transition_dict(self):
-        """Transition dictionary generator"""
+        """Transition dictionary generator
+
+        Notes:
+        * This default implementation is terribly inefficient at O(n^2)
+        * Consider trade-off between brute force vs. searching reachable states
+        """
         all_trans = {
             frozenset([s1_id, s2_id]): self.valid_transition(
                 self.valid_df.loc[s1_id, :], self.valid_df.loc[s2_id, :]
