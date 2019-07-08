@@ -65,7 +65,8 @@ class SearchSolver(ABC):
                     for agent_state in self.agent_states
                 ]
             else:
-                all_states = [[agent_state] for agent_state in self.agent_states]
+                all_states = [[agent_state]
+                              for agent_state in self.agent_states]
 
         return pd.DataFrame(all_states, columns=self.agents)
 
@@ -101,7 +102,8 @@ class SearchSolver(ABC):
         for step_ct in range(max_depth):
             current_step = steps[-1]
             reachable_states = reduce(
-                operator.or_, [transition_dict[state_id] for state_id in current_step]
+                operator.or_, [transition_dict[state_id]
+                               for state_id in current_step]
             )
 
             if state_id2 in reachable_states:
@@ -120,7 +122,8 @@ class SearchSolver(ABC):
             path.append(
                 current_step
                 & reduce(
-                    operator.or_, [transition_dict[state_id] for state_id in path[-1]]
+                    operator.or_, [transition_dict[state_id]
+                                   for state_id in path[-1]]
                 )
             )
 
@@ -131,7 +134,8 @@ class SearchSolver(ABC):
 
         state_ids = self.valid_df[
             reduce(
-                operator.and_, [self.valid_df[col] == val for col, val in state.items()]
+                operator.and_, [self.valid_df[col] ==
+                                val for col, val in state.items()]
             )
         ].index
 
@@ -145,8 +149,13 @@ class SearchSolver(ABC):
         PARAMETERS
         rename_dict (dict): key = new name, value = state
         """
-        for name, state in rename_dict.items():
-            cur_idx = self.get_state_id(state)
-            self.valid_df.rename(index={cur_idx: name}, inplace=True)
 
+        rename_df = pd.DataFrame(rename_dict).T
+        rename_df.index.name = "__new_name__"
+        agents = rename_df.columns.tolist()
+        rename_df.reset_index(inplace=True)
+
+        merged = self.valid_df.merge(rename_df, on=agents, how="inner")
+        self.valid_df.rename(
+            index=merged["__new_name__"].to_dict(), inplace=True)
         self.gen_transition_dict()
